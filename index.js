@@ -1,7 +1,6 @@
+// TY christopher4lis what would I do without you 
 const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
-
-
 canvas.width = 1024
 canvas.height = 576
 
@@ -53,7 +52,6 @@ battleZonesMap.forEach((row, i) => {
     })
 })
 
-console.log(battleZones)
 
 const image = new Image()
 image.src = './img/Top-Down_Game.png'
@@ -82,7 +80,8 @@ const player = new Sprite({
     },
     image: playerDownImage,
     frames: {
-        max: 4
+        max: 4,
+        hold: 20
     },
     Sprites: {
         up: playerUpImage,
@@ -151,7 +150,7 @@ function animate() {
     foreground.draw()
 
     let moving = true 
-    player.moving = false 
+    player.animate = false 
 
     if (battle.initiated) return
     
@@ -178,10 +177,13 @@ function animate() {
                 overlappingArea > (player.width * player.height) / 2 &&
                 Math.random() < 0.002
             )   {
-                console.log('activate battle')
 
                 // deactivate current animation loop
                 window.cancelAnimationFrame(animationId)
+
+                audio.Map.stop()
+                audio.initBattle.play()
+                audio.battle.play()
 
                 battle.initiated = true
                 gsap.to('#overlappingDiv', {
@@ -192,11 +194,17 @@ function animate() {
                     onComplete() {
                         gsap.to('#overlappingDiv', {
                             opacity: 1,
-                            duration: 0.2
+                            duration: 0.2,
+                            onComplete() {
+                                // activate a new animation loop
+                                initBattle()
+                                animateBattle()
+                                gsap.to('#overlappingDiv', {
+                                    opacity: 0,
+                                    duration: 0.2
+                                })
+                            }
                         })
-
-                        // activate a new animation loop
-                        animateBattle()
                     }
                 })
                 break 
@@ -207,7 +215,7 @@ function animate() {
 
     
     if (keys.w.pressed && lastkey === 'w') {
-        player.moving = true 
+        player.animate = true 
         player.image = player.Sprites.up
         for (let i = 0; i < boundaries.length; i++) {
             const boundary = boundaries[i]
@@ -234,7 +242,7 @@ function animate() {
             movable.position.y += 3
         })
     } else if (keys.a.pressed && lastkey === 'a') {
-        player.moving = true 
+        player.animate = true 
         player.image = player.Sprites.left
 
         for (let i = 0; i < boundaries.length; i++) {
@@ -251,7 +259,6 @@ function animate() {
                     }
                 })
             )   {
-                console.log('colliding')
             moving = false
                 break 
             }
@@ -262,7 +269,7 @@ function animate() {
             movable.position.x += 3
         })
     } else if (keys.s.pressed && lastkey === 's') {
-        player.moving = true 
+        player.animate = true 
         player.image = player.Sprites.down
         for (let i = 0; i < boundaries.length; i++) {
             const boundary = boundaries[i]
@@ -278,7 +285,6 @@ function animate() {
                     }
                 })
             )   {
-                console.log('colliding')
             moving = false
                 break 
             }
@@ -289,7 +295,7 @@ function animate() {
             movable.position.y -= 3
         })
     } else if (keys.d.pressed && lastkey === 'd') {
-        player.moving = true 
+        player.animate = true 
         player.image = player.Sprites.Right
         for (let i = 0; i < boundaries.length; i++) {
             const boundary = boundaries[i]
@@ -305,7 +311,6 @@ function animate() {
                     }
                 })
             )   {
-                console.log('colliding')
             moving = false
                 break 
             }
@@ -317,12 +322,8 @@ function animate() {
         })
     }
 }
-animate()
+// animate()
 
-function animateBattle() {
-    window.requestAnimationFrame(animateBattle)
-    console.log('animating battle')
-}
 
 let lastkey = ''
 window.addEventListener('keydown', (e) => {
@@ -363,3 +364,10 @@ window.addEventListener('keyup', (e) => {
     }
 })
 
+let clicked = false
+addEventListener('click', () => {
+    if (!clicked) {
+        audio.Map.play()
+        clicked = true
+    }
+})
